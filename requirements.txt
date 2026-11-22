@@ -1,0 +1,7 @@
+# Ten bot został zaprojektowany w standardowej bibliotece Pythona 3.8+
+# Nie wymaga instalacji zewnętrznych pakietów pip (zero external dependencies).
+# Możesz go uruchomić od razu poleceniem: python3 main.py
+
+# Opcjonalne pakiety deweloperskie (jeśli chcesz rozszerzać projekt):
+# requests>=2.31.0
+# python-dotenv>=1.0.0

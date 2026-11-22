@@ -1,0 +1,18 @@
+# Plik .gitignore - pliki wykluczone z repozytorium GitHub
+# (dane prywatne i lokalne bazy danych)
+
+# Lokalna baza SQLite (każde uruchomienie w GitHub Actions zaczyna świeżo)
+leads.db
+
+# Logi lokalne
+*.log
+bot.log
+
+# Plik z sekretami (hasła, klucze API) - NIGDY nie wgrywaj tego na GitHub!
+.env
+
+# Systemy operacyjne
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo

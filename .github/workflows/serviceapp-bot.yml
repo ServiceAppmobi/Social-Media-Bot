@@ -1,0 +1,84 @@
+name: 🇧🇷🇲🇽 ServiceApp LatAm Lead Monitor
+
+on:
+  schedule:
+    # Co 4 godziny, niezależnie od urządzeń (czas UTC; Brazylia = UTC-3, Meksyk = UTC-6)
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    # Ręczne uruchomienie jednym kliknięciem z aplikacji GitHub na iPhone lub Apple Skrótów
+    inputs:
+      mode:
+        description: 'Tryb uruchomienia bota'
+        required: true
+        default: 'live'
+        type: choice
+        options:
+          - live
+          - mock
+          - test-email
+          - test-push
+
+jobs:
+  scan-latam-leads:
+    name: Skanowanie mediów (BR & MX) + synchronizacja z iPhone
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Pobierz kod bota z repozytorium
+        uses: actions/checkout@v4
+
+      - name: 🐍 Skonfiguruj Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 💾 Przywróć bazę leads.db (deduplikacja między uruchomieniami)
+        uses: actions/cache/restore@v4
+        with:
+          path: leads.db
+          key: leads-db-${{ github.run_id }}
+          restore-keys: |
+            leads-db-
+
+      - name: 🔎 Uruchom bota i wyślij raporty
+        env:
+          APP_NAME: ${{ secrets.APP_NAME }}
+          APP_URL: ${{ secrets.APP_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          POLL_INTERVAL_SECONDS: "14400"
+        run: |
+          echo "🚀 Bot ServiceApp LatAm uruchomiony w GitHub Actions"
+          echo "⏰ $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          MODE="${{ inputs.mode || 'live' }}"
+          echo "⚙️ Tryb: $MODE"
+          if [ "$MODE" = "mock" ]; then
+            python3 main.py --mock
+          elif [ "$MODE" = "test-email" ]; then
+            python3 main.py --test-email
+          elif [ "$MODE" = "test-push" ]; then
+            python3 main.py --test-push
+          else
+            python3 main.py
+          fi
+          echo "✅ Zakończono cykl bota"
+
+      - name: 💾 Zapisz zaktualizowaną bazę leads.db w cache
+        if: always() && hashFiles('leads.db') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: leads.db
+          key: leads-db-${{ github.run_id }}
+
+      - name: 📊 Pokaż statystyki bazy leadów
+        if: always()
+        env:
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+        run: python3 main.py --stats
