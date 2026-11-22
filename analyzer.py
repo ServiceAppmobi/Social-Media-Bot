@@ -1,8 +1,5 @@
 import re
-import json
-import urllib.request
-import urllib.error
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 from config import (
     APP_NAME,
     APP_URL,
@@ -11,12 +8,39 @@ from config import (
     APP_VALUE_PROPOSITION_MX_CLIENT,
     APP_VALUE_PROPOSITION_MX_WORKER,
     GEMINI_API_KEY,
-    GEMINI_MODEL
+    GEMINI_MODEL,
 )
+from gemini_client import GeminiAPIError, GeminiClient
+
+LEAD_ANALYSIS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "intent": {
+            "type": "string",
+            "enum": ["SERVICE_SEEKER", "WORK_SEEKER", "IRRELEVANT"],
+            "description": "Classified intent of the post author.",
+        },
+        "draft_reply": {
+            "type": "string",
+            "description": "Natural 2-4 sentence reply in the local dialect, or empty string if IRRELEVANT.",
+        },
+    },
+    "required": ["intent", "draft_reply"],
+}
+
 
 class PostAnalyzer:
-    def __init__(self, api_key: str = GEMINI_API_KEY):
-        self.api_key = api_key
+    def __init__(
+        self,
+        api_key: str = GEMINI_API_KEY,
+        model: str = GEMINI_MODEL,
+        gemini_client: Optional[GeminiClient] = None,
+    ):
+        self.gemini_client = gemini_client or GeminiClient(
+            api_key=api_key,
+            default_model=model,
+        )
+        self.api_key = self.gemini_client.api_key
 
     def analyze_post(self, title: str, content: str, country: str = "BR") -> Tuple[str, Optional[str]]:
         """
@@ -30,13 +54,13 @@ class PostAnalyzer:
         if heuristic_type == "IRRELEVANT":
             return "IRRELEVANT", None
 
-        # 2. Jeśli mamy klucz Gemini, tworzymy hiper-spersonalizowany draft w odpowiednim języku
-        if self.api_key:
+        # 2. Jeśli mamy klucz Gemini, tworzymy hiper-spersonalizowany draft przez Interactions API
+        if self.gemini_client.is_configured():
             try:
                 ai_result = self._gemini_analyze(title, content, country)
                 if ai_result:
                     return ai_result
-            except Exception as e:
+            except (GeminiAPIError, ValueError, KeyError) as e:
                 print(f"[!] Błąd wywołania Gemini API ({e}). Używam silnika regułowego.")
 
         # 3. Tryb regułowy z szablonami PT-BR (Brazylia) lub ES-MX (Meksyk)
@@ -137,56 +161,47 @@ class PostAnalyzer:
                 )
         return ""
 
-    def _gemini_analyze(self, title: str, content: str, country: str) -> Optional[Tuple[str, str]]:
-        """Używa Google Gemini do analizy i wygenerowania odpowiedzi w dialekcie PT-BR lub ES-MX."""
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={self.api_key}"
-        
+    def _gemini_analyze(self, title: str, content: str, country: str) -> Optional[Tuple[str, Optional[str]]]:
+        """Używa Google Gemini Interactions API do analizy i odpowiedzi w PT-BR lub ES-MX."""
         country_name = "México" if country == "MX" else "Brasil"
-        language_spec = "Español de México (ES-MX), usando modismos naturales como 'chamba', 'cotización', etc." if country == "MX" else "Português do Brasil (PT-BR), tom natural e amigável."
-
-        prompt = f"""
-Você é um especialista em marketing de relacionamento para o aplicativo '{APP_NAME}' ({APP_URL}) no país: {country_name}.
-O {APP_NAME} é uma plataforma que conecta pessoas que precisam de serviços (reformas, encanadores, eletricistas, diaristas, técnicos) com profissionais locais qualificados.
-
-Analise a seguinte publicação de fórum, rede social ou grupo de WhatsApp:
-PAÍS: {country_name}
-TÍTULO: {title}
-CONTEÚDO: {content}
-
-TAREFAS:
-1. Determine a intenção do autor:
-   - 'SERVICE_SEEKER' se o autor estiver buscando contratar um serviço/trabalhador ou pedindo orçamentos/indicações.
-   - 'WORK_SEEKER' se for um trabalhador/autônomo buscando clientes, perguntando onde divulgar ou precisando de trabalho/chamba/renda extra.
-   - 'IRRELEVANT' se não tiver relação com contratação de serviços ou busca de trabalho autônomo.
-
-2. Se for 'SERVICE_SEEKER' ou 'WORK_SEEKER', escreva uma sugestão de resposta:
-   - Idioma: {language_spec}
-   - Tom: Natural, prestativo, empático, não pareça um robô ou spam.
-   - Recomende o {APP_NAME} como uma solução prática.
-   - Tamanho: 2 a 4 frases.
-
-Responda ESTRITAMENTE em formato JSON:
-{{
-  "intent": "SERVICE_SEEKER" | "WORK_SEEKER" | "IRRELEVANT",
-  "draft_reply": "texto da resposta"
-}}
-"""
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "response_mime_type": "application/json"}
-        }
-
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
+        language_spec = (
+            "Español de México (ES-MX), usando modismos naturales como 'chamba', 'cotización', etc."
+            if country == "MX"
+            else "Português do Brasil (PT-BR), tom natural e amigável."
         )
 
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            if resp.status == 200:
-                result_json = json.loads(resp.read().decode("utf-8"))
-                text_part = result_json["candidates"][0]["content"]["parts"][0]["text"]
-                parsed = json.loads(text_part)
-                return parsed.get("intent", "IRRELEVANT"), parsed.get("draft_reply", "")
+        system_instruction = (
+            f"Você é um especialista em marketing de relacionamento para o aplicativo '{APP_NAME}' ({APP_URL}) "
+            f"no país: {country_name}. O {APP_NAME} é uma plataforma que conecta pessoas que precisam de "
+            "serviços (reformas, encanadores, eletricistas, diaristas, técnicos) com profissionais locais "
+            "qualificados. Classifique a intenção do autor ('SERVICE_SEEKER', 'WORK_SEEKER' ou 'IRRELEVANT') "
+            f"e, quando relevante, escreva uma resposta natural, prestativa e empática de 2 a 4 frases em "
+            f"{language_spec} recomendando o {APP_NAME} sem parecer spam."
+        )
 
-        return None
+        user_prompt = (
+            f"PAÍS: {country_name}\n"
+            f"TÍTULO: {title}\n"
+            f"CONTEÚDO: {content}"
+        )
+
+        parsed, _ = self.gemini_client.create_structured_json(
+            input_data=user_prompt,
+            schema=LEAD_ANALYSIS_SCHEMA,
+            system_instruction=system_instruction,
+            temperature=0.4,
+            store=False,
+        )
+
+        if not isinstance(parsed, dict):
+            return None
+
+        intent = parsed.get("intent", "IRRELEVANT")
+        if intent not in ("SERVICE_SEEKER", "WORK_SEEKER", "IRRELEVANT"):
+            return None
+
+        if intent == "IRRELEVANT":
+            return "IRRELEVANT", None
+
+        draft_reply = (parsed.get("draft_reply") or "").strip()
+        return intent, draft_reply

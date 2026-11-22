@@ -51,10 +51,12 @@ NTFY_TOPIC = os.getenv("NTFY_TOPIC") or ""
 NTFY_SERVER = os.getenv("NTFY_SERVER") or "https://ntfy.sh"
 
 # ==============================================================================
-# AI / GEMINI API (Opcjonalne)
+# AI / GEMINI API (Interactions API v1 — opcjonalne)
 # ==============================================================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or ""
-GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-4-hydrogen"
+GEMINI_API_VERSION = os.getenv("GEMINI_API_VERSION") or "v1"
+GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS") or "30")
 
 # ==============================================================================
 # 🇧🇷 MONITORING SOCIAL MEDIA - BRAZYLIA (PT-BR)

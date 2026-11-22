@@ -17,6 +17,7 @@ on:
           - mock
           - test-email
           - test-push
+          - test-gemini
 
 jobs:
   scan-latam-leads:
@@ -49,6 +50,7 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-4-hydrogen' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
@@ -64,6 +66,8 @@ jobs:
             python3 main.py --test-email
           elif [ "$MODE" = "test-push" ]; then
             python3 main.py --test-push
+          elif [ "$MODE" = "test-gemini" ]; then
+            python3 main.py --test-gemini
           else
             python3 main.py
           fi

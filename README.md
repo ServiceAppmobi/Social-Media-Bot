@@ -97,6 +97,12 @@ python3 main.py --test-email
 # Wysłanie testowego powiadomienia Push (ntfy) na iPhone
 python3 main.py --test-push
 
+# Test połączenia z Google Gemini Interactions API (gemini-4-hydrogen)
+python3 main.py --test-gemini
+
+# Uruchomienie testów integracji Gemini API (zero zależności)
+python3 -m unittest test_gemini_integration.py -v
+
 # Skanowanie na żywo (Brazylia & Meksyk)
 python3 main.py
 

@@ -28,11 +28,12 @@ def load_env_file():
 
 load_env_file()
 
-from config import POLL_INTERVAL_SECONDS, EMAIL_RECIPIENT, EMAIL_SENDER
+from config import POLL_INTERVAL_SECONDS, EMAIL_RECIPIENT, EMAIL_SENDER, GEMINI_MODEL
 from database import init_db, is_post_seen, save_lead, mark_notified, get_stats
 from monitors.reddit_monitor import RedditMonitor
 from monitors.whatsapp_monitor import WhatsAppMonitor
 from analyzer import PostAnalyzer
+from gemini_client import GeminiAPIError, GeminiClient
 from notifiers.telegram_notifier import TelegramNotifier
 from notifiers.email_notifier import EmailNotifier
 from notifiers.ntfy_notifier import NtfyNotifier
@@ -204,6 +205,7 @@ def main():
     parser.add_argument("--test-email", action="store_true", help="Wysyła testową wiadomość e-mail przez Resend/SMTP")
     parser.add_argument("--test-telegram", action="store_true", help="Wysyła testowy komunikat na Telegram")
     parser.add_argument("--test-push", action="store_true", help="Wysyła testowe powiadomienie Push (ntfy) na iPhone")
+    parser.add_argument("--test-gemini", action="store_true", help="Sprawdza połączenie z Google Gemini Interactions API")
     parser.add_argument("--stats", action="store_true", help="Wyświetla statystyki z podziałem na Brazylię i Meksyk")
 
     args = parser.parse_args()
@@ -258,6 +260,23 @@ def main():
             print("[✓] Sukces! Sprawdź aplikację ntfy na iPhone.")
         else:
             print("[!] Błąd: Nie udało się wysłać powiadomienia Push.")
+            sys.exit(1)
+        return
+
+    if args.test_gemini:
+        gemini = GeminiClient()
+        if not gemini.is_configured():
+            print("[!] Błąd: Brak GEMINI_API_KEY w pliku .env / GitHub Secrets.")
+            print("    Wygeneruj klucz w Google AI Studio: https://aistudio.google.com/apikey")
+            sys.exit(1)
+        print(f"[*] Testuję połączenie z Gemini Interactions API ({gemini.api_version}, model: {gemini.default_model})...")
+        try:
+            interaction = gemini.health_check()
+            tokens = interaction.usage.get("total_tokens")
+            token_info = f" | tokeny: {tokens}" if tokens is not None else ""
+            print(f"[✓] Sukces! Status: {interaction.status} | Odpowiedź: {interaction.output_text!r}{token_info}")
+        except GeminiAPIError as exc:
+            print(f"[!] Błąd połączenia z Gemini API: {exc}")
             sys.exit(1)
         return
 
