@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from config import (
     APP_NAME,
     APP_URL,
+    GOOGLE_PLAY_URL,
     APP_VALUE_PROPOSITION_BR_CLIENT,
     APP_VALUE_PROPOSITION_BR_WORKER,
     APP_VALUE_PROPOSITION_MX_CLIENT,
@@ -129,19 +130,19 @@ class PostAnalyzer:
         return "IRRELEVANT"
 
     def _generate_heuristic_draft(self, lead_type: str, country: str, title: str, content: str) -> str:
-        """Generuje naturalną odpowiedź dopasowaną do kraju i języka."""
+        """Generuje naturalną odpowiedź dopasowaną do kraju i języka wraz z linkiem do Google Play."""
         if country == "MX":
             # Meksyk (Hiszpański es-MX)
             if lead_type == "SERVICE_SEEKER":
                 return (
-                    f"¡Hola! Si todavía estás buscando, te recomiendo checar {APP_NAME} ({APP_URL}). "
+                    f"¡Hola! Si todavía estás buscando, te recomiendo checar {APP_NAME} ({APP_URL} | Google Play: {GOOGLE_PLAY_URL}). "
                     f"Es {APP_VALUE_PROPOSITION_MX_CLIENT}. "
                     f"Puedes solicitar cotizaciones gratis y comparar las opiniones de otros clientes antes de contratar. "
                     f"¡Ojalá te sirva para solucionar rápido el trabajo!"
                 )
             elif lead_type == "WORK_SEEKER":
                 return (
-                    f"¡Qué tal colega! Para conseguir más chamba además de tus conocidos, vale la pena registrarte en {APP_NAME} ({APP_URL}). "
+                    f"¡Qué tal colega! Para conseguir más chamba además de tus conocidos, vale la pena registrarte en {APP_NAME} ({APP_URL} | Google Play: {GOOGLE_PLAY_URL}). "
                     f"Es {APP_VALUE_PROPOSITION_MX_WORKER}. "
                     f"El registro es fácil y te conecta directo con personas que están buscando servicios en tu colonia o municipio. "
                     f"¡Mucho éxito con la chamba!"
@@ -150,14 +151,14 @@ class PostAnalyzer:
             # Brazylia (Portugalski pt-BR)
             if lead_type == "SERVICE_SEEKER":
                 return (
-                    f"Olá! Se ainda estiver procurando, dá uma olhada no {APP_NAME} ({APP_URL}). "
+                    f"Olá! Se ainda estiver procurando, dá uma olhada no {APP_NAME} ({APP_URL} | Google Play: {GOOGLE_PLAY_URL}). "
                     f"É {APP_VALUE_PROPOSITION_BR_CLIENT}. "
                     f"Dá para solicitar orçamentos sem compromisso e ver as avaliações de outros clientes antes de fechar. "
                     f"Espero que ajude a resolver logo!"
                 )
             elif lead_type == "WORK_SEEKER":
                 return (
-                    f"Fala parceiro! Para divulgar seu serviço além do boca a boca, vale a pena dar uma olhada no {APP_NAME} ({APP_URL}). "
+                    f"Fala parceiro! Para divulgar seu serviço além do boca a boca, vale a pena dar uma olhada no {APP_NAME} ({APP_URL} | Google Play: {GOOGLE_PLAY_URL}). "
                     f"É {APP_VALUE_PROPOSITION_BR_WORKER}. "
                     f"O cadastro é simples e ajuda bastante a conectar com quem está precisando de atendimento no seu bairro/cidade. "
                     f"Boa sorte na captação!"
@@ -174,12 +175,13 @@ class PostAnalyzer:
         )
 
         system_instruction = (
-            f"Você é um especialista em marketing de relacionamento para o aplicativo '{APP_NAME}' ({APP_URL}) "
+            f"Você é um especialista em marketing de relacionamento para o aplicativo '{APP_NAME}' "
+            f"(site: {APP_URL}, Google Play: {GOOGLE_PLAY_URL}) "
             f"no país: {country_name}. O {APP_NAME} é uma plataforma que conecta pessoas que precisam de "
             "serviços (reformas, encanadores, eletricistas, diaristas, técnicos) com profissionais locais "
             "qualificados. Classifique a intenção do autor ('SERVICE_SEEKER', 'WORK_SEEKER' ou 'IRRELEVANT') "
             f"e, quando relevante, escreva uma resposta natural, prestativa e empática de 2 a 4 frases em "
-            f"{language_spec} recomendando o {APP_NAME} sem parecer spam."
+            f"{language_spec} recomendando o {APP_NAME} e incluindo o link do Google Play ({GOOGLE_PLAY_URL}) sem parecer spam."
         )
 
         user_prompt = (

@@ -7,6 +7,10 @@ import json
 
 APP_NAME = os.getenv("APP_NAME") or "ServiceApp"
 APP_URL = os.getenv("APP_URL") or "https://serviceapp.mobi"
+GOOGLE_PLAY_URL = (
+    os.getenv("GOOGLE_PLAY_URL")
+    or "https://play.google.com/store/apps/details?id=pl.serviceapp&pli=1"
+)
 
 # Wartości marketingowe dla Brazylii (PT-BR)
 APP_VALUE_PROPOSITION_BR_CLIENT = (
