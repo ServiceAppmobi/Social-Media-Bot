@@ -61,6 +61,18 @@ GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS") or "30")
 # ==============================================================================
 # 🇧🇷 MONITORING SOCIAL MEDIA - BRAZYLIA (PT-BR)
 # ==============================================================================
+REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID") or ""
+REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET") or ""
+REDDIT_USER_AGENT = (
+    os.getenv("REDDIT_USER_AGENT")
+    or "ServiceAppLatAmMonitor/2.1 (+https://serviceapp.mobi)"
+)
+MAX_POST_AGE_DAYS = int(os.getenv("MAX_POST_AGE_DAYS") or "14")
+
+MASTODON_ENABLED = (os.getenv("MASTODON_ENABLED") or "true").lower() in ("true", "1", "yes")
+MASTODON_TAGS_BR = ["emprego", "trampos", "freelancer", "servicos"]
+MASTODON_TAGS_MX = ["chamba", "trabajo", "empleo", "mexico"]
+
 TARGET_SUBREDDITS_BR = [
     "brasil",
     "saopaulo",

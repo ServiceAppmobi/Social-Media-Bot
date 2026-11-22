@@ -9,12 +9,14 @@ Bot działa **w pełni automatycznie w chmurze (GitHub Actions co 4 godziny)** i
 ## 🎯 Monitorowane kraje i kanały
 
 ### 1. 🇧🇷 Brazylia (Portugalski PT-BR)
-* **Fora / Reddit:** `r/brasil`, `r/saopaulo`, `r/riodejaneiro`, `r/trampos`, `r/curitiba`, `r/belohorizonte`, `r/brdev`, `r/ConselhosLegais`, `r/conversas` (z automatycznym fallbackiem RSS).
+* **Fora / Reddit:** `r/brasil`, `r/saopaulo`, `r/riodejaneiro`, `r/trampos`, `r/curitiba`, `r/belohorizonte`, `r/brdev`, `r/ConselhosLegais`, `r/conversas` (przez darmowe API Arctic Shift lub opcjonalne Reddit OAuth — bez blokad 403/429 w chmurze).
+* **Mastodon:** `bolha.us` (lokalna społeczność BR) oraz tagi `#emprego`, `#trampos`, `#freelancer`, `#servicos`.
 * **Grupy WhatsApp:** Webhook listener dla grup ogłoszeniowych i zleceń.
 * **Słowa kluczowe:** *„preciso de encanador”*, *„indicação de diarista”*, *„trabalho autônomo”*, *„onde divulgar serviços”*, *„orçamento reforma”*.
 
 ### 2. 🇲🇽 Meksyk (Hiszpański ES-MX)
-* **Fora / Reddit:** `r/mexico`, `r/MexicoCity`, `r/Monterrey`, `r/Guadalajara`, `r/Puebla`, `r/Tijuana`, `r/ChambasMexico`, `r/lacamiseta`, `r/taquerosprogramadores`.
+* **Fora / Reddit:** `r/mexico`, `r/MexicoCity`, `r/Monterrey`, `r/Guadalajara`, `r/Puebla`, `r/Tijuana`, `r/ChambasMexico`, `r/lacamiseta`, `r/taquerosprogramadores` (Arctic Shift / opcjonalne Reddit OAuth).
+* **Mastodon:** tagi `#chamba`, `#trabajo`, `#empleo`, `#mexico`.
 * **Grupy WhatsApp:** Webhook listener dla grup giełdy pracy i zleceń.
 * **Słowa kluczowe:** *„busco plomero”*, *„busco electricista”*, *„recomienden albañil”*, *„busco chamba urgente”*, *„dónde conseguir clientes”*.
 

@@ -72,21 +72,23 @@ class PostAnalyzer:
         if country == "MX":
             # Meksyk (Hiszpański es-MX)
             mx_service_patterns = [
-                r"busco (un |una )?(plomero|electricista|albañil|pintor|técnico|carpintero|cerrajero)",
-                r"(recomienden|alguien recomienda|conocen a) (un |una )?(plomero|electricista|albañil|señora de limpieza)",
-                r"cotizaci[o|ó]n para (remodelaci[o|ó]n|trabajo|reparaci[o|ó]n)",
+                r"(busco|necesito) (un |una )?(buen |buena )?(plomero|electricista|albañil|pintor|técnico|tecnico|carpintero|cerrajero|herrero|jardinero|mec[aá]nico|técnico de|tecnico de)",
+                r"(recomienden|alguien recomienda|conocen a|alg[uú]n contacto de) (un |una )?(buen |buena )?(plomero|electricista|albañil|pintor|carpintero|cerrajero|técnico|tecnico|señora de limpieza|mantenimiento)",
+                r"cotizaci[oó]n para (remodelaci[oó]n|trabajo|reparaci[oó]n|pintura|plomer[ií]a|electricidad|obra)",
                 r"alguien que haga trabajos de",
                 r"necesito contratar (a alguien|un servicio)",
-                r"busco señora de limpieza"
+                r"busco (señora|persona|alguien) (de|para) limpieza",
+                r"(recomienden|busco) servicio de (limpieza|mudanza|reparaci[oó]n|mantenimiento|fumigaci[oó]n|aire acondicionado)",
             ]
             mx_work_patterns = [
-                r"busco (chamba|trabajo|empleo)",
-                r"hago trabajos de (albañiler[i|í]a|plomer[i|í]a|electricidad|pintura)",
-                r"ofrezco mis servicios",
-                r"d[o|ó]nde (conseguir clientes|anunciar mi trabajo)",
+                r"(busco|necesito|me urge) (chamba|trabajo|empleo|jale)",
+                r"hago trabajos de (albañiler[ií]a|plomer[ií]a|electricidad|pintura|carpinter[ií]a|mantenimiento|reparaci[oó]n)",
+                r"ofrezco (mis )?servicios",
+                r"d[oó]nde (conseguir clientes|anunciar mi trabajo|ofrecer mis servicios)",
                 r"trabajador independiente",
-                r"me urge (chamba|trabajar)",
-                r"ingreso extra"
+                r"c[oó]mo conseguir (m[aá]s )?(clientes|chamba)",
+                r"ingreso(s)? extra",
+                r"sin (chamba|trabajo|empleo).{0,40}(ayuda|consejo|d[oó]nde|busco)",
             ]
 
             for p in mx_service_patterns:
@@ -99,21 +101,22 @@ class PostAnalyzer:
         else:
             # Brazylia (Portugalski pt-BR)
             br_service_patterns = [
-                r"preciso de (um |uma )?(encanador|eletricista|diarista|pedreiro|pintor|marceneiro|técnico|profissional)",
-                r"alguém (indica|recomenda|tem contato)",
-                r"indicação de (um |uma )?(encanador|eletricista|diarista|pedreiro|pintor|profissional|faxineira)",
-                r"orçamento para",
-                r"contratar (serviço|pessoa|alguém)",
-                r"onde encontro (um |uma )?(profissional|pessoa que faça)"
+                r"(preciso|procuro) (de )?(um |uma )?(bom |boa )?(encanador|eletricista|diarista|faxineira|pedreiro|pintor|marceneiro|chaveiro|jardineiro|técnico|tecnico|montador|profissional|marido de aluguel)",
+                r"(alguém|alguem) (indica|recomenda|conhece|tem contato de?) (um |uma )?(bom |boa )?(encanador|eletricista|diarista|faxineira|pedreiro|pintor|marceneiro|chaveiro|técnico|tecnico|montador|profissional|marido de aluguel|limpeza)",
+                r"indica[cç][aã]o de (um |uma )?(encanador|eletricista|diarista|pedreiro|pintor|profissional|faxineira|técnico|tecnico|marceneiro|chaveiro|reforma)",
+                r"or[cç]amento para (reforma|pintura|obra|servi[cç]o|reparo|instala[cç][aã]o|mudan[cç]a)",
+                r"contratar (servi[cç]o|pessoa|alguém|alguem|profissional|diarista|pedreiro|eletricista|encanador)",
+                r"onde encontro (um |uma )?(profissional|pessoa que fa[cç]a|técnico|tecnico|diarista|pedreiro|eletricista|encanador)",
             ]
             br_work_patterns = [
                 r"como conseguir clientes",
-                r"onde divulgar (meu trabalho|meus serviços)",
-                r"trabalho autônomo",
-                r"procurando (tramp[o|a]|bico|renda extra|trabalho)",
-                r"sou (eletricista|encanador|pintor|técnico|autônomo)",
-                r"precisando de trabalho urgente",
-                r"plataforma para (autônomos|freelancer)"
+                r"onde divulgar (meu trabalho|meus servi[cç]os)",
+                r"trabalho aut[oô]nomo",
+                r"(procurando|precisando de|buscando) (tramp[oa]|bico|renda extra|trabalho|emprego|servi[cç]o|freela)",
+                r"preciso de ajuda para encontrar (emprego|trabalho|trampo|servi[cç]o)",
+                r"sou (eletricista|encanador|pintor|pedreiro|marceneiro|técnico|tecnico|aut[oô]nomo|diarista).{0,60}(cliente|servi[cç]o|trabalho|trampo|divulgar|renda)",
+                r"fa[cç]o servi[cç]os de (el[eé]trica|hidr[aá]ulica|pintura|reforma|manuten[cç][aã]o|limpeza|marcenaria)",
+                r"plataforma para (aut[oô]nomos|freelancer|prestar servi[cç]os)",
             ]
 
             for p in br_service_patterns:

@@ -31,6 +31,7 @@ load_env_file()
 from config import POLL_INTERVAL_SECONDS, EMAIL_RECIPIENT, EMAIL_SENDER, GEMINI_MODEL
 from database import init_db, is_post_seen, save_lead, mark_notified, get_stats
 from monitors.reddit_monitor import RedditMonitor
+from monitors.mastodon_monitor import MastodonMonitor
 from monitors.whatsapp_monitor import WhatsAppMonitor
 from analyzer import PostAnalyzer
 from gemini_client import GeminiAPIError, GeminiClient
@@ -166,6 +167,7 @@ def run_pipeline(mock=False, dry_run=False):
     emailer = EmailNotifier()
     ntfy = NtfyNotifier()
     reddit = RedditMonitor()
+    mastodon = MastodonMonitor()
 
     posts = []
     if mock:
@@ -175,6 +177,7 @@ def run_pipeline(mock=False, dry_run=False):
     else:
         print("[*] Skanowanie publicznych wątków i forów (Brazylia & Meksyk)...")
         posts.extend(reddit.scan_all())
+        posts.extend(mastodon.scan_all())
 
     total_scanned = len(posts)
     processed, new_leads = process_posts(posts, analyzer, telegram, emailer, ntfy=ntfy, dry_run=dry_run)

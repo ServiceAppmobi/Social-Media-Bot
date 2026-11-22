@@ -137,7 +137,12 @@ class EmailNotifier:
                 type_label = "📌 DYSKUSJA"
 
             platform = lead.get("platform", "web")
-            plat_badge = "🟢 WhatsApp" if platform == "whatsapp" else "🌐 Forum / Reddit"
+            if platform == "whatsapp":
+                plat_badge = "🟢 WhatsApp"
+            elif platform == "mastodon":
+                plat_badge = "🐘 Mastodon"
+            else:
+                plat_badge = "🌐 Forum / Reddit"
             
             title = lead.get("title", "")
             url = lead.get("url", "#")
