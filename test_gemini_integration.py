@@ -25,8 +25,8 @@ class _FakeHTTPResponse:
 
 
 class TestGeminiClient(unittest.TestCase):
-    def test_default_model_is_current_gemini_4(self):
-        self.assertEqual(config.GEMINI_MODEL, "gemini-4-hydrogen")
+    def test_default_model_is_free_tier_friendly(self):
+        self.assertEqual(config.GEMINI_MODEL, "gemini-3.5-flash-lite")
         self.assertEqual(config.GEMINI_API_VERSION, "v1")
 
     def test_create_interaction_sends_v1_rest_request_with_header_auth(self):
@@ -198,6 +198,26 @@ class TestGeminiClient(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 401)
         self.assertIn("API key not valid.", str(ctx.exception))
         self.assertNotIn("super-secret-value", str(ctx.exception))
+
+    def test_list_wrapped_http_error_parses_clean_message(self):
+        err_payload = json.dumps(
+            [{"error": {"code": 402, "status": "RESOURCE_EXHAUSTED", "message": "Credits depleted."}}]
+        ).encode("utf-8")
+        http_err = urllib.error.HTTPError(
+            url="https://generativelanguage.googleapis.com/v1/interactions",
+            code=402,
+            msg="Payment Required",
+            hdrs={},
+            fp=io.BytesIO(err_payload),
+        )
+        client = GeminiClient(api_key="test-key", max_retries=0)
+        with patch("urllib.request.urlopen", side_effect=http_err):
+            with self.assertRaises(GeminiAPIError) as ctx:
+                client.health_check()
+
+        self.assertEqual(ctx.exception.status_code, 402)
+        self.assertEqual(ctx.exception.error_code, "RESOURCE_EXHAUSTED")
+        self.assertIn("Credits depleted.", str(ctx.exception))
 
 
 class TestPostAnalyzerIntegration(unittest.TestCase):

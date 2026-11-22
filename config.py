@@ -54,7 +54,7 @@ NTFY_SERVER = os.getenv("NTFY_SERVER") or "https://ntfy.sh"
 # AI / GEMINI API (Interactions API v1 — opcjonalne)
 # ==============================================================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or ""
-GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-4-hydrogen"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite"
 GEMINI_API_VERSION = os.getenv("GEMINI_API_VERSION") or "v1"
 GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS") or "30")
 

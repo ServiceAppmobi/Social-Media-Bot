@@ -20,7 +20,7 @@ from config import (
 )
 
 DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com"
-DEFAULT_MODEL = "gemini-4-hydrogen"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 DEFAULT_DECISION_MODEL = "gemini-decision-1"
 RETRYABLE_STATUS_CODES = (429, 500, 502, 503, 504)
 
@@ -292,6 +292,8 @@ class GeminiClient:
             return str(fallback), None
         try:
             parsed = json.loads(raw_err)
+            if isinstance(parsed, list) and parsed:
+                parsed = parsed[0]
             error_obj = parsed.get("error") if isinstance(parsed, dict) else None
             if isinstance(error_obj, dict):
                 return (
