@@ -14,7 +14,8 @@ from config import (
     SMTP_PASSWORD,
     SMTP_USE_TLS,
     RESEND_API_KEY,
-    APP_NAME
+    APP_NAME,
+    get_country_info,
 )
 
 class EmailNotifier:
@@ -110,20 +111,25 @@ class EmailNotifier:
         return self._send_smtp_email(subject, html_content, text_content)
 
     def send_digest_email(self, leads: List[Dict[str, Any]]) -> bool:
-        """Wysyła zbiorcze podsumowanie leadów z Brazylii i Meksyku."""
+        """Wysyła zbiorcze podsumowanie leadów ze wszystkich monitorowanych krajów."""
         if not leads:
             return False
 
-        br_count = sum(1 for l in leads if l.get("country") == "BR")
-        mx_count = sum(1 for l in leads if l.get("country") == "MX")
+        counts = {}
+        for l in leads:
+            code = l.get("country", "BR")
+            counts[code] = counts.get(code, 0) + 1
+        summary_parts = [f"{get_country_info(c)['flag']} {c}: {n}" for c, n in counts.items()]
+        summary_str = ", ".join(summary_parts)
 
-        subject = f"🌎 [{APP_NAME}] Wykryto {len(leads)} nowych leadów (🇧🇷 Brazylia: {br_count}, 🇲🇽 Meksyk: {mx_count})"
+        subject = f"🌎 [{APP_NAME}] Wykryto {len(leads)} nowych leadów ({summary_str})"
 
         lead_cards_html = ""
         for idx, lead in enumerate(leads, 1):
             country = lead.get("country", "BR")
-            country_flag = "🇧🇷 Brazylia" if country == "BR" else "🇲🇽 Meksyk"
-            country_badge_color = "#16a34a" if country == "BR" else "#dc2626"
+            cinfo = get_country_info(country)
+            country_flag = f"{cinfo['flag']} {cinfo['name']}"
+            country_badge_color = cinfo["badge_color"]
 
             lead_type = lead.get("lead_type")
             if lead_type == "SERVICE_SEEKER":
@@ -150,7 +156,7 @@ class EmailNotifier:
             author = lead.get("author", "użytkownik")
             snippet = lead.get("content_snippet", "")
             draft = lead.get("ai_draft", "")
-            lang_label = "Português (PT-BR)" if country == "BR" else "Español (ES-MX)"
+            lang_label = cinfo["lang_label"]
 
             btn_label = "💬 Otwórz czat na WhatsApp &rarr;" if platform == "whatsapp" else "🔗 Otwórz wątek na forum &rarr;"
 
@@ -209,13 +215,13 @@ class EmailNotifier:
                         🌎 {APP_NAME} - LatAm Lead Monitor
                     </h1>
                     <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">
-                        Nowe zapytania o usługi i pracę: 🇧🇷 Brazylia & 🇲🇽 Meksyk (Fora, Social Media, Grupy WhatsApp)
+                        Nowe zapytania o usługi i pracę: Ameryka Płd., USA, Kanada, Singapur &amp; Japonia
                     </p>
                 </div>
 
                 <div style="padding: 24px;">
                     <p style="font-size: 14px; color: #475569; margin: 0 0 20px 0;">
-                        Cześć Paweł! Wykryto <b>{len(leads)} nowych leadów</b> (Brazylia: {br_count}, Meksyk: {mx_count}). Poniżej znajdziesz bezpośrednie linki do dyskusji oraz przygotowane naturalne odpowiedzi do skopiowania.
+                        Cześć Paweł! Wykryto <b>{len(leads)} nowych leadów</b> ({summary_str}). Poniżej znajdziesz bezpośrednie linki do dyskusji oraz przygotowane naturalne odpowiedzi do skopiowania.
                     </p>
 
                     {lead_cards_html}

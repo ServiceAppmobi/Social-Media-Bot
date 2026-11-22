@@ -1,7 +1,7 @@
 import urllib.request
 import urllib.parse
 import json
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, get_country_info
 
 class TelegramNotifier:
     def __init__(self, token: str = TELEGRAM_BOT_TOKEN, chat_id: str = TELEGRAM_CHAT_ID):
@@ -48,7 +48,8 @@ class TelegramNotifier:
             type_label = "📌 <b>NOWA DYSKUSJA</b>"
 
         country = lead.get("country", "BR")
-        country_header = "🇧🇷 BRAZYLIA" if country == "BR" else "🇲🇽 MEKSYK"
+        cinfo = get_country_info(country)
+        country_header = f"{cinfo['flag']} {cinfo['name'].upper()}"
 
         title = lead.get("title", "Brak tytułu").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         url = lead.get("url", "#")

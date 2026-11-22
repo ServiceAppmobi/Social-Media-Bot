@@ -101,5 +101,28 @@ class TestMastodonMonitor(unittest.TestCase):
         self.assertEqual(posts[0]["content"], "Busco plomero en CDMX urgente")
 
 
+class TestGlobalCountriesCoverage(unittest.TestCase):
+    def test_all_requested_countries_are_configured_and_analyzed(self):
+        from analyzer import PostAnalyzer
+        from config import COUNTRIES, GOOGLE_PLAY_URL
+
+        expected = {"BR", "MX", "AR", "CO", "CL", "PE", "EC", "VE", "UY", "PY", "BO", "GY", "SR", "US", "CA", "SG", "JP"}
+        self.assertTrue(expected.issubset(set(COUNTRIES.keys())))
+
+        analyzer = PostAnalyzer(api_key="")
+        samples = [
+            ("SG", "Anyone recommend aircon servicing in Tampines?", "Looking for reliable aircon repair."),
+            ("JP", "東京でおすすめの水道修理業者を探しています", "キッチンの水漏れで見積もり依頼したいです。"),
+            ("US", "Need a reliable plumber in Austin", "Pipe leak under kitchen sink."),
+            ("CA", "Cherche un bon plombier à Montréal", "Besoin d'un devis pour plomberie."),
+            ("AR", "Alguien recomienda un gasista matriculado en Buenos Aires?", "Necesito presupuesto para reparación."),
+            ("CL", "Busco gasfiter urgente en Santiago", "Fuga en el baño."),
+        ]
+        for code, title, content in samples:
+            lead_type, draft = analyzer.analyze_post(title, content, country=code)
+            self.assertEqual(lead_type, "SERVICE_SEEKER", f"Failed for {code}")
+            self.assertIn(GOOGLE_PLAY_URL, draft)
+
+
 if __name__ == "__main__":
     unittest.main()

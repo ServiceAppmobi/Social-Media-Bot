@@ -7,16 +7,11 @@ import urllib.request
 from typing import Any, Dict, List, Optional
 
 from config import (
-    KEYWORDS_BR_SERVICE,
-    KEYWORDS_BR_WORK,
-    KEYWORDS_MX_SERVICE,
-    KEYWORDS_MX_WORK,
+    COUNTRIES,
     MAX_POST_AGE_DAYS,
     REDDIT_CLIENT_ID,
     REDDIT_CLIENT_SECRET,
     REDDIT_USER_AGENT,
-    TARGET_SUBREDDITS_BR,
-    TARGET_SUBREDDITS_MX,
 )
 
 ARCTIC_SHIFT_URL = "https://arctic-shift.photon-reddit.com/api/posts/search"
@@ -183,31 +178,29 @@ class RedditMonitor:
         subreddits: List[str],
         service_keywords: Optional[List[str]] = None,
         work_keywords: Optional[List[str]] = None,
-        limit_per_sub: int = 100,
+        limit_per_sub: int = 60,
     ) -> List[Dict[str, Any]]:
         """Przeszukuje najnowsze wpisy ze wszystkich subredditów dla danego kraju."""
         found: List[Dict[str, Any]] = []
         for sub in subreddits:
             posts = self.fetch_posts_for_subreddit(sub, country=country, limit=limit_per_sub)
             found.extend(posts)
-            time.sleep(0.35)
+            time.sleep(0.2)
         return found
 
-    def scan_all(self, limit_per_sub: int = 100) -> List[Dict[str, Any]]:
-        """Przeszukuje społeczności Reddit w Brazylii (PT-BR) i Meksyku (ES-MX)."""
+    def scan_all(self, limit_per_sub: int = 60) -> List[Dict[str, Any]]:
+        """Przeszukuje społeczności Reddit dla wszystkich 17 skonfigurowanych krajów."""
         all_found: List[Dict[str, Any]] = []
         mode_label = "Reddit OAuth API" if self._has_oauth_credentials() else "Arctic Shift Public Reddit API"
-        print(f"    [Źródło Reddit: {mode_label} | okno: ostatnie {self.max_age_days} dni]")
+        print(f"    [Źródło Reddit: {mode_label} | kraje: {len(COUNTRIES)} | okno: ostatnie {self.max_age_days} dni]")
 
-        print("🇧🇷 Skanowanie społeczności Reddit w Brazylii...")
-        posts_br = self.scan_country("BR", TARGET_SUBREDDITS_BR, KEYWORDS_BR_SERVICE, KEYWORDS_BR_WORK, limit_per_sub)
-        print(f"    -> Pobrano {len(posts_br)} świeżych wpisów z Brazylii")
-        all_found.extend(posts_br)
-
-        print("🇲🇽 Skanowanie społeczności Reddit w Meksyku...")
-        posts_mx = self.scan_country("MX", TARGET_SUBREDDITS_MX, KEYWORDS_MX_SERVICE, KEYWORDS_MX_WORK, limit_per_sub)
-        print(f"    -> Pobrano {len(posts_mx)} świeżych wpisów z Meksyku")
-        all_found.extend(posts_mx)
+        for code, info in COUNTRIES.items():
+            subs = info.get("subreddits") or []
+            if not subs:
+                continue
+            posts = self.scan_country(code, subs, limit_per_sub=limit_per_sub)
+            print(f"    {info['flag']} {info['name']} ({code}): pobrano {len(posts)} wpisów ({len(subs)} subów)")
+            all_found.extend(posts)
 
         unique = {p["id"]: p for p in all_found}.values()
         return list(unique)

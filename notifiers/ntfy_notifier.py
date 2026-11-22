@@ -42,8 +42,7 @@ class NtfyNotifier:
             return False
 
     def notify_lead(self, lead: Dict[str, Any]) -> bool:
-        country = lead.get("country", "BR")
-        country_code = "BR" if country == "BR" else "MX"
+        country_code = (lead.get("country") or "BR").upper()
         lead_type = "Klient" if lead.get("lead_type") == "SERVICE_SEEKER" else "Fachowiec"
         title = f"[{APP_NAME} {country_code}] {lead_type}: {lead.get('source_channel', '')}"
         body = (

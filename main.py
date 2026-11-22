@@ -28,7 +28,7 @@ def load_env_file():
 
 load_env_file()
 
-from config import POLL_INTERVAL_SECONDS, EMAIL_RECIPIENT, EMAIL_SENDER, GEMINI_MODEL
+from config import POLL_INTERVAL_SECONDS, EMAIL_RECIPIENT, EMAIL_SENDER, GEMINI_MODEL, COUNTRIES, get_country_info
 from database import init_db, is_post_seen, save_lead, mark_notified, get_stats
 from monitors.reddit_monitor import RedditMonitor
 from monitors.mastodon_monitor import MastodonMonitor
@@ -47,15 +47,19 @@ def write_github_summary(total_scanned: int, new_leads: list):
     if not summary_path:
         return
 
-    br_count = sum(1 for l in new_leads if l.get("country") == "BR")
-    mx_count = sum(1 for l in new_leads if l.get("country") == "MX")
+    counts = {}
+    for l in new_leads:
+        code = l.get("country", "BR")
+        counts[code] = counts.get(code, 0) + 1
+    breakdown = " | ".join(f"{get_country_info(c)['flag']} {c}: {n}" for c, n in counts.items()) or "brak"
 
     lines = [
-        "# 🌎 ServiceApp LatAm Lead Monitor — Raport",
+        "# 🌎 ServiceApp Global Lead Monitor — Raport",
         "",
         f"- **Data (UTC):** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        f"- **Monitorowane kraje:** {len(COUNTRIES)} (Ameryka Płd., USA, Kanada, Singapur, Japonia)",
         f"- **Przeanalizowano wpisów:** {total_scanned}",
-        f"- **Nowych leadów:** **{len(new_leads)}** (🇧🇷 Brazylia: {br_count} | 🇲🇽 Meksyk: {mx_count})",
+        f"- **Nowych leadów:** **{len(new_leads)}** ({breakdown})",
         "",
     ]
 
@@ -63,7 +67,8 @@ def write_github_summary(total_scanned: int, new_leads: list):
         lines.append("_Brak nowych, nieprzetworzonych leadów w tym cyklu._")
     else:
         for idx, lead in enumerate(new_leads, 1):
-            flag = "🇧🇷 Brazylia" if lead.get("country") == "BR" else "🇲🇽 Meksyk"
+            cinfo = get_country_info(lead.get("country", "BR"))
+            flag = f"{cinfo['flag']} {cinfo['name']}"
             role = "🔍 Klient szuka fachowca" if lead.get("lead_type") == "SERVICE_SEEKER" else "🛠️ Fachowiec szuka zleceń"
             lines.extend([
                 f"### {idx}. [{flag}] {lead.get('title', 'Bez tytułu')}",
@@ -216,10 +221,11 @@ def main():
     if args.stats:
         init_db()
         stats = get_stats()
-        print("\n📊 STATYSTYKI LEADÓW SERVICEAPP (Brazylia & Meksyk):")
+        print("\n📊 STATYSTYKI LEADÓW SERVICEAPP (17 krajów: Ameryka Płd., USA, Kanada, Singapur, Japonia):")
         print(f"  • Wszystkich zapisanych leadów:       {stats['total']}")
-        print(f"  • 🇧🇷 Leady z Brazylii:                 {stats['brazil']}")
-        print(f"  • 🇲🇽 Leady z Meksyku:                  {stats['mexico']}")
+        for code, count in (stats.get("by_country") or {}).items():
+            cinfo = get_country_info(code)
+            print(f"  • {cinfo['flag']} {cinfo['name']} ({code}): {count}")
         print(f"  • 🔍 Klienci szukający fachowców:     {stats['service_seekers']}")
         print(f"  • 🛠️ Wykonawcy szukający pracy:       {stats['work_seekers']}")
         print(f"  • Wysłane raporty:                    {stats['notified']}")

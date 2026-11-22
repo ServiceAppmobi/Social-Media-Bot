@@ -10,8 +10,7 @@ from typing import Any, Dict, List
 
 from config import (
     MASTODON_ENABLED,
-    MASTODON_TAGS_BR,
-    MASTODON_TAGS_MX,
+    MASTODON_TAG_GROUPS,
     MAX_POST_AGE_DAYS,
     REDDIT_USER_AGENT,
 )
@@ -99,9 +98,12 @@ class MastodonMonitor:
             "created_utc": created_utc,
         }
 
-    def scan_tag(self, instance: str, tag: str, country: str, limit: int = 30) -> List[Dict[str, Any]]:
+    def scan_tag(self, instance: str, tag: str, country: str, limit: int = 30, lang: str = "") -> List[Dict[str, Any]]:
         url = f"https://{instance}/api/v1/timelines/tag/{urllib.parse.quote(tag)}?limit={min(limit, 40)}"
-        allowed_langs = ("pt",) if country == "BR" else ("es",)
+        if lang:
+            allowed_langs = (lang,)
+        else:
+            allowed_langs = ("pt",) if country == "BR" else ("es",) if country in ("MX", "AR", "CO", "CL", "PE", "EC", "VE", "UY", "PY", "BO") else ("ja", "en") if country == "JP" else ("en",)
         results: List[Dict[str, Any]] = []
         for st in self._fetch_json(url):
             item = self._normalize_status(st, country, f"Mastodon #{tag}", allowed_langs)
@@ -124,18 +126,15 @@ class MastodonMonitor:
             return []
 
         all_found: List[Dict[str, Any]] = []
-        print("🐘 Skanowanie publicznych kanałów Mastodon (BR & MX)...")
+        print("🐘 Skanowanie publicznych kanałów Mastodon (Ameryki + Singapur + Japonia)...")
 
-        # Brazylia: lokalna instancja bolha.us + tagi na mastodon.social
+        # Brazylia: lokalna instancja bolha.us
         all_found.extend(self.scan_local_public("bolha.us", country="BR", limit=40))
-        for tag in MASTODON_TAGS_BR:
-            all_found.extend(self.scan_tag("mastodon.social", tag, country="BR", limit=30))
-            time.sleep(0.25)
 
-        # Meksyk / LatAm ES: tagi na mastodon.social
-        for tag in MASTODON_TAGS_MX:
-            all_found.extend(self.scan_tag("mastodon.social", tag, country="MX", limit=30))
-            time.sleep(0.25)
+        for country, lang, tags in MASTODON_TAG_GROUPS:
+            for tag in tags:
+                all_found.extend(self.scan_tag("mastodon.social", tag, country=country, limit=25, lang=lang))
+                time.sleep(0.2)
 
         unique = {p["id"]: p for p in all_found}.values()
         posts = list(unique)

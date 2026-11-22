@@ -84,6 +84,9 @@ def get_stats():
     cursor.execute("SELECT COUNT(*) FROM leads WHERE notified = 1")
     notified = cursor.fetchone()[0]
 
+    cursor.execute("SELECT country, COUNT(*) FROM leads GROUP BY country ORDER BY COUNT(*) DESC")
+    by_country = {row[0] or "BR": row[1] for row in cursor.fetchall()}
+
     conn.close()
     return {
         "total": total,
@@ -91,5 +94,6 @@ def get_stats():
         "mexico": mexico_count,
         "service_seekers": service_seekers,
         "work_seekers": work_seekers,
-        "notified": notified
+        "notified": notified,
+        "by_country": by_country,
     }
