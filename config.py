@@ -94,8 +94,8 @@ MASTODON_ENABLED = (os.getenv("MASTODON_ENABLED") or "true").lower() in ("true",
 
 # Tryb aktywnego fokusu: domyślnie TYLKO São Paulo (pozostałe kraje wstrzymane / on hold).
 # Aby wrócić do wszystkich 17 krajów, ustaw: ACTIVE_COUNTRIES=ALL oraz CITY_FILTER=
-ACTIVE_COUNTRIES_RAW = (os.getenv("ACTIVE_COUNTRIES") or "BR").strip()
-CITY_FILTER = (os.getenv("CITY_FILTER") if os.getenv("CITY_FILTER") is not None else "São Paulo").strip()
+ACTIVE_COUNTRIES_RAW = (os.getenv("ACTIVE_COUNTRIES") or "ALL").strip()
+CITY_FILTER = (os.getenv("CITY_FILTER") if os.getenv("CITY_FILTER") is not None else "").strip()
 SAO_PAULO_TERMS = (
     "são paulo",
     "sao paulo",
