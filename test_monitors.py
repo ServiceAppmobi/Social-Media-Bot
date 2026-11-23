@@ -123,6 +123,15 @@ class TestGlobalCountriesCoverage(unittest.TestCase):
             self.assertEqual(lead_type, "SERVICE_SEEKER", f"Failed for {code}")
             self.assertIn(GOOGLE_PLAY_URL, draft)
 
+    def test_sao_paulo_only_filter_default(self):
+        from config import CITY_FILTER, get_active_country_codes, matches_city_filter
+
+        self.assertEqual(CITY_FILTER, "São Paulo")
+        self.assertEqual(get_active_country_codes(), ["BR"])
+        self.assertTrue(matches_city_filter("Preciso de encanador na Vila Mariana", "", "r/saopaulo"))
+        self.assertTrue(matches_city_filter("Eletricista em São Paulo", "Zona Sul"))
+        self.assertFalse(matches_city_filter("Preciso de encanador em Curitiba", "Batel", "r/curitiba"))
+
 
 if __name__ == "__main__":
     unittest.main()

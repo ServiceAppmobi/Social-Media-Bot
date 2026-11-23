@@ -92,6 +92,43 @@ REDDIT_USER_AGENT = (
 MAX_POST_AGE_DAYS = int(os.getenv("MAX_POST_AGE_DAYS") or "14")
 MASTODON_ENABLED = (os.getenv("MASTODON_ENABLED") or "true").lower() in ("true", "1", "yes")
 
+# Tryb aktywnego fokusu: domyślnie TYLKO São Paulo (pozostałe kraje wstrzymane / on hold).
+# Aby wrócić do wszystkich 17 krajów, ustaw: ACTIVE_COUNTRIES=ALL oraz CITY_FILTER=
+ACTIVE_COUNTRIES_RAW = (os.getenv("ACTIVE_COUNTRIES") or "BR").strip()
+CITY_FILTER = (os.getenv("CITY_FILTER") if os.getenv("CITY_FILTER") is not None else "São Paulo").strip()
+SAO_PAULO_TERMS = (
+    "são paulo",
+    "sao paulo",
+    "sampa",
+    "grande sp",
+    "capital sp",
+    "zona sul",
+    "zona leste",
+    "zona norte",
+    "zona oeste",
+    "vila mariana",
+    "pinheiros",
+    "moema",
+    "itaim",
+    "tatuapé",
+    "tatuape",
+    "itaquera",
+    "santana",
+    "lapa",
+    "morumbi",
+    "perdizes",
+    "consolação",
+    "consolacao",
+    "paulista",
+    "osasco",
+    "guarulhos",
+    "santo andré",
+    "santo andre",
+    "são bernardo",
+    "sao bernardo",
+    "abc paulista",
+)
+
 COUNTRIES = {
     # --- South America (All 12 countries) ---
     "BR": {
@@ -248,6 +285,28 @@ def get_country_info(country_code: str) -> dict:
             "subreddits": [],
         },
     )
+
+
+def get_active_country_codes():
+    """Zwraca aktywne kody krajów (domyślnie tylko BR dla trybu São Paulo; 'ALL' włącza wszystkie 17)."""
+    if ACTIVE_COUNTRIES_RAW.upper() == "ALL":
+        return list(COUNTRIES.keys())
+    codes = [c.strip().upper() for c in ACTIVE_COUNTRIES_RAW.split(",") if c.strip()]
+    valid = [c for c in codes if c in COUNTRIES]
+    return valid or ["BR"]
+
+
+def matches_city_filter(title: str, content: str, source_channel: str = "", city_filter: str = CITY_FILTER) -> bool:
+    """Sprawdza, czy wpis dotyczy wybranego miasta (domyślnie São Paulo)."""
+    if not city_filter:
+        return True
+    haystack = f"{source_channel} {title} {content}".lower()
+    cf = city_filter.lower()
+    if cf in ("são paulo", "sao paulo", "sp"):
+        if "r/saopaulo" in haystack or "são paulo" in haystack or "sao paulo" in haystack:
+            return True
+        return any(term in haystack for term in SAO_PAULO_TERMS)
+    return cf in haystack
 
 
 # Kompatybilność wsteczna dla stałych

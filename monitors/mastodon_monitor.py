@@ -9,10 +9,13 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from config import (
+    CITY_FILTER,
     MASTODON_ENABLED,
     MASTODON_TAG_GROUPS,
     MAX_POST_AGE_DAYS,
     REDDIT_USER_AGENT,
+    get_active_country_codes,
+    matches_city_filter,
 )
 
 
@@ -125,16 +128,28 @@ class MastodonMonitor:
         if not MASTODON_ENABLED:
             return []
 
+        active_codes = set(get_active_country_codes())
         all_found: List[Dict[str, Any]] = []
-        print("🐘 Skanowanie publicznych kanałów Mastodon (Ameryki + Singapur + Japonia)...")
+        city_note = f" (filtr: {CITY_FILTER})" if CITY_FILTER else ""
+        print(f"🐘 Skanowanie publicznych kanałów Mastodon{city_note}...")
 
-        # Brazylia: lokalna instancja bolha.us
-        all_found.extend(self.scan_local_public("bolha.us", country="BR", limit=40))
+        if "BR" in active_codes:
+            all_found.extend(self.scan_local_public("bolha.us", country="BR", limit=40))
+            if CITY_FILTER.lower() in ("são paulo", "sao paulo", "sp"):
+                all_found.extend(self.scan_tag("mastodon.social", "saopaulo", country="BR", limit=30, lang="pt"))
 
         for country, lang, tags in MASTODON_TAG_GROUPS:
+            if country not in active_codes:
+                continue
             for tag in tags:
                 all_found.extend(self.scan_tag("mastodon.social", tag, country=country, limit=25, lang=lang))
                 time.sleep(0.2)
+
+        if CITY_FILTER:
+            all_found = [
+                p for p in all_found
+                if matches_city_filter(p.get("title", ""), p.get("content", ""), p.get("source_channel", ""))
+            ]
 
         unique = {p["id"]: p for p in all_found}.values()
         posts = list(unique)

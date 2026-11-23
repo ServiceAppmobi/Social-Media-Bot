@@ -7,11 +7,14 @@ import urllib.request
 from typing import Any, Dict, List, Optional
 
 from config import (
+    CITY_FILTER,
     COUNTRIES,
     MAX_POST_AGE_DAYS,
     REDDIT_CLIENT_ID,
     REDDIT_CLIENT_SECRET,
     REDDIT_USER_AGENT,
+    get_active_country_codes,
+    matches_city_filter,
 )
 
 ARCTIC_SHIFT_URL = "https://arctic-shift.photon-reddit.com/api/posts/search"
@@ -189,17 +192,28 @@ class RedditMonitor:
         return found
 
     def scan_all(self, limit_per_sub: int = 60) -> List[Dict[str, Any]]:
-        """Przeszukuje społeczności Reddit dla wszystkich 17 skonfigurowanych krajów."""
+        """Przeszukuje społeczności Reddit (domyślnie fokus na São Paulo; inne kraje na hold)."""
         all_found: List[Dict[str, Any]] = []
+        active_codes = get_active_country_codes()
         mode_label = "Reddit OAuth API" if self._has_oauth_credentials() else "Arctic Shift Public Reddit API"
-        print(f"    [Źródło Reddit: {mode_label} | kraje: {len(COUNTRIES)} | okno: ostatnie {self.max_age_days} dni]")
+        city_note = f" | filtr miasta: {CITY_FILTER}" if CITY_FILTER else ""
+        print(f"    [Źródło Reddit: {mode_label} | aktywne kraje: {', '.join(active_codes)}{city_note} | okno: {self.max_age_days} dni]")
 
-        for code, info in COUNTRIES.items():
-            subs = info.get("subreddits") or []
+        for code in active_codes:
+            info = COUNTRIES[code]
+            subs = list(info.get("subreddits") or [])
+            # W trybie tylko São Paulo zawężamy listę subów BR do r/saopaulo, r/brasil i r/trampos
+            if code == "BR" and CITY_FILTER.lower() in ("são paulo", "sao paulo", "sp"):
+                subs = ["saopaulo", "brasil", "trampos"]
             if not subs:
                 continue
             posts = self.scan_country(code, subs, limit_per_sub=limit_per_sub)
-            print(f"    {info['flag']} {info['name']} ({code}): pobrano {len(posts)} wpisów ({len(subs)} subów)")
+            if CITY_FILTER:
+                posts = [
+                    p for p in posts
+                    if matches_city_filter(p.get("title", ""), p.get("content", ""), p.get("source_channel", ""))
+                ]
+            print(f"    {info['flag']} {info['name']} ({code}): pobrano {len(posts)} pasujących wpisów ({len(subs)} subów)")
             all_found.extend(posts)
 
         unique = {p["id"]: p for p in all_found}.values()
