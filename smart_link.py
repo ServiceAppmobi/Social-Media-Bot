@@ -3,8 +3,8 @@
 
 # WAZNE: Podmien te 2 linki na prawdziwe z Twoich kont, jak je masz.
 # Jak ich nie masz, zostaw tak jak jest, strona bedzie kierowac na serviceapp.mobi
-APP_STORE_URL = "https://apps.apple.com/app/serviceapp"
-PLAY_URL = "https://play.google.com/store/apps/details?id=mobi.serviceapp"
+APP_STORE_URL = "https://apps.apple.com/ie/app/pl-serviceapp/id1253478797"
+PLAY_URL = "https://play.google.com/store/apps/details?id=pl.serviceapp&pli=1"
 BASE_DOWNLOAD_URL = "https://serviceapp.mobi/download"
 
 # Miasta i uslugi - do QR
