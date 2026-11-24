@@ -1,0 +1,2 @@
+today = datetime.date.today().toordinal()
+index = today % len(KEYWORDS)
