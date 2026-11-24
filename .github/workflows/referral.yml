@@ -1,0 +1,30 @@
+name: ServiceApp Referral
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  referral:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+
+      - name: Ustaw Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Wygeneruj polecenia
+        run: python referral.py > referral.txt
+
+      - name: Utworz zadanie
+        run: gh issue create --title "Polecenia na dzis" --body-file referral.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
