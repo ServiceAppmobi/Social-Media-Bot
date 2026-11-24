@@ -16,12 +16,12 @@ jobs:
       - name: Pobierz kod
         uses: actions/checkout@v4
 
-      - name: Ustaw Node.js 22
-        uses: actions/setup-node@v4
+      - name: Ustaw Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 22
+          python-version: '3.11'
 
       - name: Sprawdź internet i odpowiedz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/serviceapp-bot.mjs
+        run: python main.py
