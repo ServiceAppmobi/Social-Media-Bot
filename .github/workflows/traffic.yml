@@ -1,0 +1,30 @@
+name: ServiceApp Traffic
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  traffic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+
+      - name: Ustaw Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Wygeneruj ruch
+        run: python traffic_bot.py > traffic.txt
+
+      - name: Utworz zadanie
+        run: gh issue create --title "Traffic na dzis" --body-file traffic.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
