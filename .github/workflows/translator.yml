@@ -1,0 +1,39 @@
+name: ServiceApp Translator
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+
+      - name: Ustaw Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Wygeneruj tlumaczenia
+        run: python translator.py > translations.txt
+
+      - name: Utworz zadanie z tlumaczeniami
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const text = fs.readFileSync('translations.txt', 'utf8');
+            const date = new Date().toLocaleDateString('pl-PL');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Tlumaczenia na dzis - ${date}`,
+              body: `## ServiceApp - tlumaczenia do akceptacji\n\nNie publikuj automatycznie. Skopiuj, sprawdz i wklej recznie.\n\n${text}\n\n---\nZasady: max 1-2 posty dziennie, tylko w dzien, czas Brazylii.\nBR: Conta oficial ServiceApp\nMX: Cuenta oficial ServiceApp`
+            });
